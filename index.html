@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Columnar Transposition Cipher Decoder</title>
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/css/bootstrap.min.css" integrity="sha384-Vkoo8x4CGsO3+Hhxv8T/Q5PaXtkKtu6ug5TOeNV6gBiFeWPGFN9MuhOf23Q9Ifjh" crossorigin="anonymous">
+    <style>
+        body { background: #f0f0f0; min-height: 100vh; display: flex; flex-direction: column; }
+        .container { margin-top: 20px; }
+        .footer { background: #000; padding: 1rem; color: #fff; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Расшифровальщик</h1>
+        <div class="form-group">
+            <textarea class="form-control text-monospace" rows="4" id="srcText" placeholder="Введите сообщение здесь..." spellcheck="false"></textarea>
+            <div class="invalid-feedback">Вы должны ввести сообщение.</div>
+        </div>
+        <div class="form-group">
+            <input class="form-control text-monospace" id="key1" type="text" placeholder="Введите ключ здесь..." />
+            <div class="invalid-feedback">Вы должны ввести ключ шифрования.</div>
+        </div>
+        <button class="btn btn-success" onclick="decodeClick();">Раскодировать</button>
+        <h3 class="mt-3">Результат</h3>
+        <textarea class="form-control text-monospace" rows="4" id="resultText" spellcheck="false" readonly></textarea>
+    </div>
+
+    <script>
+        var alphabet = 'АБВГДЕЖЗИКЛМНОПРСТУФХЦЧШЩЪЫЬЭЮЯ';
+
+        function decodeClick() {
+            if (!checkText() || !checkKey()) return;
+
+            var srcText = document.getElementById('srcText').value;//.toUpperCase();
+            var key = document.getElementById('key1').value.toUpperCase();
+            var resultText = decrypt(srcText, alphabet, key);
+            document.getElementById('resultText').value = resultText;
+        }
+
+        function checkText() {
+            var textElement = document.getElementById('srcText');
+            if (textElement.value.length === 0) {
+                textElement.classList.add('is-invalid');
+                return false;
+            } else {
+                textElement.classList.remove('is-invalid');
+                return true;
+            }
+        }
+
+        function checkKey() {
+            var keyElement = document.getElementById('key1');
+            if (keyElement.value.length === 0) {
+                keyElement.classList.add('is-invalid');
+                return false;
+            } else {
+                keyElement.classList.remove('is-invalid');
+                return true;
+            }
+        }
+
+        function decrypt(src, alphabet, key) {
+            var columnOrder = getColumnOrder(key);
+            var p = 0;
+            var columns = Array(key.length).fill('');
+            for (var i = 0; i < key.length; i++) {
+                var k = columnOrder[i];
+                var l = Math.floor(src.length / key.length);
+                if (k < src.length % key.length) l++;
+                columns[k] = src.slice(p, p + l);
+                p += l;
+            }
+
+            var dst = '';
+            for (var i = 0; i < src.length; i++) {
+                var k = i % key.length;
+                dst += columns[k][Math.floor(i / key.length)];
+            }
+
+            return dst;
+        }
+
+        function getColumnOrder(key) {
+            var sortedKey = key.split('').sort().join('');
+            var columnOrder = Array(key.length);
+            var p = 0;
+            var pch = '';
+            for (var i = 0; i < sortedKey.length; i++) {
+                if (pch != sortedKey[i]) p = 0;
+                pch = sortedKey[i];
+                p = key.indexOf(pch, p);
+                columnOrder[i] = p;
+                p++;
+            }
+            return columnOrder;
+        }
+    </script>
+</body>
+</html>
